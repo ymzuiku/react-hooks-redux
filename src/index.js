@@ -1,44 +1,73 @@
-import React, { useState, useContext, createContext } from 'react';
+import React, { useReducer, useContext, createContext } from 'react';
 
-export default function createStore(initialState, isLog = false) {
-  function devTool(type, diff, state) {
-    console.info(`|------- redux: ${type} -------|`);
-    console.info('|-diff:', diff);
-    console.info('|-merge:', state);
+let devLogSty = `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`;
+const isDev = process.env.NODE_ENV === 'development';
+export function devLog(type, oldState, nextState) {
+  if (isDev) {
+    console.info(`%c|------- redux: ${type} -------|`, devLogSty);
+    console.info('|--last:', oldState);
+    console.info('|--next:', nextState);
   }
+}
+
+export function reducerInAction(state, action) {
+  if (action.callback) {
+    const nextState = action.callback(state);
+    return nextState;
+  }
+  return state;
+}
+
+export default function createStore(reducer, initialState = {}, middleware) {
+  function reducer(state, action) {
+    if (action.reducer) {
+      const nextState = action.reducer(state);
+      if (middleware) {
+        for (const k in middleware) {
+          middleware[k](action.type, state, nextState);
+        }
+      }
+      return nextState;
+    }
+    return state;
+  }
+  let realReducer;
+  if (middleware) {
+    realReducer = function(state, action) {
+      const nextState = reducer(state, action);
+      if (middleware) {
+        for (const k in middleware) {
+          middleware[k](action.type, state, nextState);
+        }
+      }
+      return nextState;
+    };
+  } else {
+    realReducer = reducer;
+  }
+
   const AppContext = createContext();
   const store = {
     useContext: function() {
-      const state = useContext(AppContext);
-      return state;
+      return useContext(AppContext);
     },
     dispatch: undefined,
+    state: initialState,
+    initialState,
   };
-  function useProvider(initialState = {}) {
-    const [state, setState] = useState(initialState);
-    async function dispatch(data) {
-      if (typeof data === 'function') {
-        const { type, ...diff } = await data(state);
-        const nextState = { ...state, ...diff };
-        setState(nextState);
-        if (isLog) {
-          devTool(type, diff, nextState);
-        }
-      } else {
-        const { type, ...diff } = data;
-        const nextState = { ...state, ...diff };
-        setState(nextState);
-        if (isLog) {
-          devTool(type, diff, nextState);
-        }
-      }
-    }
-    return [state, dispatch];
-  }
   function Provider(props) {
-    const [state, dispatch] = useProvider(initialState);
-    store.dispatch = dispatch;
+    const [state, dispatch] = useReducer(realReducer, initialState);
+    if (!store.dispatch) {
+      store.dispatch = async function(action) {
+        if (typeof action === 'function') {
+          dispatch(action(dispatch, store.state));
+        } else {
+          dispatch(action);
+        }
+      };
+    }
+    store.state = state;
     return <AppContext.Provider {...props} value={state} />;
   }
-  return { Provider, store, devTool };
+  return { Provider, store };
 }

@@ -1,48 +1,81 @@
 # Use
 ```js
 import React from 'react';
-import HookRedux from 'react-hooks-redux';
+import ReactHookRedux, { reducerInAction, devLog } from 'react-hooks-redux';
+
+const initialState = {
+  count: 0,
+  asyncCount: 0,
+};
+const { Provider, store } = ReactHookRedux(reducerInAction, initialState, { devLog });
 
 const actions = {
-  add: state => {
+  add: () => {
     return {
-      type: 'add-fn',
-      count: state.count === undefined ? 0 : state.count + 1,
+      type: 'add',
+      reducer(state) {
+        return {
+          ...state,
+          count: state.count + 1,
+        };
+      },
     };
+  },
+  asyncAdd: () => async (dispatch, ownState) => {
+    const asyncCount = await testFetchAdd(ownState.asyncCount);
+    dispatch({
+      type: 'asyncAdd',
+      reducer(state) {
+        return {
+          ...state,
+          asyncCount,
+        };
+      },
+    });
   },
 };
 
-const isLog = true;
-const initialState = {}
-const { Provider, store } = HookRedux(initialState, isLog);
-
-const Item = React.memo(() => {
+function Item() {
   const state = store.useContext();
   return (
-      <div>
-        count: {state.count}
-      </div>
+    <>
+      <div>count: {state.count}</div>
+      <div>async-count: {state.asyncCount}</div>
+    </>
   );
-});
+}
 
-const Button = React.memo(() => {
-  function handleAdd() {
-    store.dispatch(actions.add);
+function Button() {
+  async function handleAdd() {
+    store.dispatch(actions.add());
+    store.dispatch(await actions.asyncAdd());
+    console.log('waited asyncAdd');
   }
   return (
     <div>
       <div onClick={handleAdd}>add</div>
     </div>
   );
-});
+}
 
-export default React.memo(() => {
+export default () => {
   return (
     <Provider>
-        <Item />
-        <Button />
+      <Item />
+      <Button />
     </Provider>
   );
-});
+};
+
+// --- test function
+
+const testFetchAdd = a => {
+  return new Promise(cb => {
+    setTimeout(() => {
+      cb(a + 1);
+    }, 600);
+  });
+};
+
 
 ```

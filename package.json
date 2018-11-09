@@ -1,6 +1,6 @@
 {
   "name": "react-hooks-redux",
-  "version": "0.0.3",
+  "version": "0.9.3",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
@@ -64,13 +64,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ymzuiku/react-dom-pseudo.git"
+    "url": "git+https://github.com/ymzuiku/react-hooks-redux.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ymzuiku/react-dom-pseudo/issues"
+    "url": "https://github.com/ymzuiku/react-hooks-redux/issues"
   },
-  "homepage": "https://github.com/ymzuiku/react-dom-pseudo#readme"
+  "homepage": "https://github.com/ymzuiku/react-hooks-redux#readme"
 }
