@@ -18,7 +18,7 @@ export default function createStore(params) {
   const { reducer, initialState, actions, middleware } = {
     reducer: reducerInAction,
     initialState: {},
-    actions,
+    actions: {},
     middleware: undefined,
     ...params,
   };

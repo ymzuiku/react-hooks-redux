@@ -1,6 +1,6 @@
 {
   "name": "react-hooks-redux",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "",
   "main": "lib/index.js",
   "scripts": {

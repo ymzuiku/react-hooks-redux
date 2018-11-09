@@ -5,6 +5,7 @@ interface IStore {
   dispatch: Function;
   state: Object;
   initalState: Object;
+  actions: Object;
 }
 
 interface IReactHooksRedux {
