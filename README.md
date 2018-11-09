@@ -4,11 +4,11 @@ import React from 'react';
 import ReactHookRedux, { reducerInAction, devLog } from 'react-hooks-redux';
 
 const { Provider, store } = ReactHookRedux({
+  reducer: reducerInAction,
   initialState: {
     count: 0,
     asyncCount: 0,
   },
-  reducer: reducerInAction,
   middleware: { devLog },
 });
 
