@@ -9,7 +9,7 @@ export function devLog(isDev, oldState, nextState, action) {
 }
 
 export function reducerInAction(state, action) {
-  if (action.reducer) {
+  if (typeof action.reducer === 'function') {
     return action.reducer(state);
   }
   return state;

@@ -1,24 +1,97 @@
-# Use
+[English Document](README-EN.md)
+
+> 需要 react 版本 >= 16.7
+
+## 原由
+
+react-hooks 是 react 未来的编写推荐，此库在官方的 useReducer 钩子上进行一层很简单的封装以达到和以往 react-redux \ redux-thunk \ redux-logger 类似的功能，并且大幅度简化了声明。
+
+react-hooks 的更多信息请阅读 [reactjs.org/hooks](reactjs.org/hooks);
+
+
+## 特性
+
+- 非常小，只有11k，gzip之后只有3.9k
+- 已经内置了 reduc-thunk 和 redux-logger
+- 默认可以不创建 reducer，使用 reducer-in-action 的风格, 也可声明传统的 reducer 风格
+
+## reducer-in-action
+
+这 6 行代码就是 reducer-in-action 的全部:
+
+```js
+function reducerInAction(state, action) {
+  if (typeof action.reducer === 'function') {
+    return action.reducer(state);
+  }
+  return state;
+}
+```
+
+它把 reducer 给简化了，放置到了每一个 action 中进行 reducer 的处理
+
+reducer-in-action 配合 thunk 风格，可以非常简单的编写 redux，随着项目的复杂，我们只需要编写action，会使得项目结构更清晰。
+
+## 使用
+
+我们只用了30行代码就声明了一个react-redux的例子, 拥抱hooks。
+
+```js
+import React from 'react';
+import ReactHookRedux from 'react-hooks-redux';
+
+const { Provider, store } = ReactHookRedux({
+  isDev: true,
+  initialState: { name: 'dog', age: 0 },
+});
+
+function actionOfAdd() {
+  return {
+    type: 'add the count',
+    reducer(state) {
+      return { ...state, age: state.age + 1 };
+    },
+  };
+}
+
+setInterval(() => {
+  console.log('aa');
+  store.dispatch(actionOfAdd());
+}, 500);
+
+function Page() {
+  const state = store.useContext();
+  return <div>{state.age}</div>;
+}
+
+export default function App() {
+  return <Provider><Page /></Provider>;
+}
+```
+
+## 完整例子
+
+内容均在此代码中，可以拷贝替换 create-react-app 项目的 App.js 进行执行，并阅读其中注释。
 
 ```js
 import React from 'react';
 import ReactHookRedux, { reducerInAction, devLog } from 'react-hooks-redux';
 
+// 通过 ReactHookRedux 获得 Provider 组件和一个 sotre 对象
+// <Provider />组件内置了Context关联到value, store在其他组件中应用进行数据的获取(useContext)或传递(dispatch)
 const { Provider, store } = ReactHookRedux({
   isDev: true, // default is false
   initialState: { count: 0, asyncCount: 0 }, // default is {}
-  reducer: reducerInAction, // default is 'reducerInAction'
-  middleware: { devLog }, // default is { devLog }
+  reducer: reducerInAction, // default is reducerInAction 所以可省略
+  middleware: { devLog }, // default is { devLog } 所以可省略
 });
-
-// So you can use this code, ignore default params
-// const { Provider, store } = ReactHookRedux({ isDev: true, initialState: { count: 0, asyncCount: 0 } });
 
 const actions = {
   add: () => {
     return {
       type: 'add',
-      // if use reducerInAction, we can add reducer Function repeat reducer
+      // 如果使用 reducerInAction 的reducer， 我们需要在action的返回对象中添加一个reducer函数，并且在此函数处理此action的reducer行为
+      // 这只是把reducer中的行为拆分到了action中，可以不用再去编写reducer文件
       reducer(state) {
         return {
           ...state,
@@ -27,7 +100,8 @@ const actions = {
       },
     };
   },
-  // if return a function, we can add use lick react-thunk
+
+  // 如果返回的是一个function，我们会把它当成类似 react-thunk 的处理方式，并且额外增加一个ownState的对象方便获取state
   asyncAdd: () => async (dispatch, ownState) => {
     const asyncCount = await testFetchAdd(ownState.asyncCount);
     dispatch({
@@ -44,7 +118,7 @@ const actions = {
 };
 
 function Item() {
-  // use the useContext get the store.getState();
+  // 使用 useContext 来代替 sotre,getState()，带来的好处是不需要为每个组件使用connect进行处理
   const state = store.useContext();
   return (
     <>
@@ -56,33 +130,58 @@ function Item() {
 
 function Button() {
   async function handleAdd() {
-    // use dispatch
+    // 使用 dispatch
     store.dispatch(actions.add());
-    // use async dispatch
+    // 使用 async dispatch
     await store.dispatch(actions.asyncAdd());
   }
-  return (
-    <button onClick={handleAdd}>add</button>
-  );
+  return <button onClick={handleAdd}>add</button>;
 }
 
-export default function() {
+export default function App() {
   return (
     <Provider>
       <Item />
       <Button />
     </Provider>
   );
-};
+}
 
-// --- test function
-
-function testFetchAdd (a) {
+// 模拟异步操作
+function testFetchAdd(a) {
   return new Promise(cb => {
     setTimeout(() => {
       cb(a + 1);
     }, 600);
   });
-};
+}
+```
 
+以上就是全部
+
+## Licenes
+
+```
+
+MIT License
+
+Copyright (c) 2013-present, Facebook, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
