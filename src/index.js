@@ -1,9 +1,12 @@
 import React from 'react';
 
-export function devLog(isDev, oldState, nextState, action) {
+export function devLog(lastState, nextState, action, isDev) {
   if (isDev) {
-    console.log(`%c|------- redux: ${action.type} -------|`, `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`);
-    console.log('|--last:', oldState);
+    console.log(
+      `%c|------- redux: ${action.type} -------|`,
+      `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
+    );
+    console.log('|--last:', lastState);
     console.log('|--next:', nextState);
   }
 }
@@ -21,7 +24,7 @@ export default function createStore(params) {
     reducer: reducerInAction,
     initialState: {},
     actions: {},
-    middleware: { devLog },
+    middleware: [devLog],
     ...params,
   };
   const AppContext = React.createContext();
@@ -36,11 +39,12 @@ export default function createStore(params) {
   };
   let realReducer;
   if (middleware) {
-    realReducer = function(state, action) {
-      const nextState = reducer(state, action);
-      if (middleware) {
-        for (const k in middleware) {
-          middleware[k](isDev, state, nextState, action);
+    realReducer = function(lastState, action) {
+      let nextState = reducer(lastState, action);
+      for (let i = 0; i < middleware.length; i++) {
+        const newState = middleware[i](lastState, nextState, action, isDev);
+        if (newState) {
+          nextState = newState;
         }
       }
       return nextState;
@@ -49,7 +53,7 @@ export default function createStore(params) {
     realReducer = reducer;
   }
 
-  function Provider(props) {
+  const Provider = props => {
     const [state, dispatch] = React.useReducer(realReducer, initialState);
     if (!store.dispatch) {
       store.dispatch = async function(action) {
@@ -62,6 +66,6 @@ export default function createStore(params) {
     }
     store.state = state;
     return <AppContext.Provider {...props} value={state} />;
-  }
+  };
   return { Provider, store };
 }

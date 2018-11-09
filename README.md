@@ -1,20 +1,96 @@
 [English Document](README-EN.md)
 
-> 需要 react 版本 >= 16.7
-
 ## 原由
 
-react-hooks 是 react 官方新的编写推荐，此库在官方的 useReducer 钩子上进行一层很简单的封装以达到和以往 react-redux \ redux-thunk \ redux-logger 类似的功能，并且大幅度简化了声明。
+react-hooks 是 react 官方新的编写推荐，我们很容易在官方的 useReducer 钩子上进行一层很简单的封装以达到和以往 react-redux \ redux-thunk \ redux-logger 类似的功能，并且大幅度简化了声明。
 
 react-hooks 的更多信息请阅读 [reactjs.org/hooks](reactjs.org/hooks);
 
 ## 特性
 
 - 非常小，只有 11k，gzip 之后只有 3.9k
-- 已经内置了 reduc-thunk 和 redux-logger
-- 默认可以不创建 reducer，使用 reducer-in-action 的风格, 也可声明传统的 reducer 风格
+- 简易的实现了 redux-thunk 和 redux-logger
+- 默认使用 reducer-in-action 的风格, 也可声明传统的 reducer 风格
 
-## reducer-in-action
+## 先看看源码
+
+这70行代码就是全部, 客官可以先阅读以下，或许后续的说明文档也就不需要阅读了。
+
+```js
+import React from 'react';
+
+export function devLog(lastState, nextState, action, isDev) {
+  if (isDev) {
+    console.log(
+      `%c|------- redux: ${action.type} -------|`,
+      `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
+    );
+    console.log('|--last:', lastState);
+    console.log('|--next:', nextState);
+  }
+}
+
+export function reducerInAction(state, action) {
+  if (typeof action.reducer === 'function') {
+    return action.reducer(state);
+  }
+  return state;
+}
+
+export default function createStore(params) {
+  const { isDev, reducer, initialState, actions, middleware } = {
+    isDev: false,
+    reducer: reducerInAction,
+    initialState: {},
+    actions: {},
+    middleware: [devLog],
+    ...params,
+  };
+  const AppContext = React.createContext();
+  const store = {
+    useContext: function() {
+      return React.useContext(AppContext);
+    },
+    actions,
+    dispatch: undefined,
+    state: initialState,
+    initialState,
+  };
+  let realReducer;
+  if (middleware) {
+    realReducer = function(lastState, action) {
+      let nextState = reducer(lastState, action);
+      for (let i = 0; i < middleware.length; i++) {
+        const newState = middleware[i](lastState, nextState, action, isDev);
+        if (newState) {
+          nextState = newState;
+        }
+      }
+      return nextState;
+    };
+  } else {
+    realReducer = reducer;
+  }
+
+  function Provider(props) {
+    const [state, dispatch] = React.useReducer(realReducer, initialState);
+    if (!store.dispatch) {
+      store.dispatch = async function(action) {
+        if (typeof action === 'function') {
+          await action(dispatch, store.state);
+        } else {
+          dispatch(action);
+        }
+      };
+    }
+    store.state = state;
+    return <AppContext.Provider {...props} value={state} />;
+  }
+  return { Provider, store };
+}
+```
+
+## reducer-in-action 风格
 
 这 6 行代码就是 reducer-in-action 的全部:
 
@@ -33,18 +109,19 @@ reducer-in-action 配合 thunk 风格，可以非常简单的编写 redux，随�
 
 ## 使用
 
-安装
+安装, 您甚至可以将上面那70行代码拷贝至项目中, 需要 react 版本 >= 16.7
 
 ```js
 yarn add react-hooks-redux
 ```
 
-我们只用了 30 行代码就声明了一个完整的 react-redux 的例子, 拥抱 hooks。
+我们只用了 35 行代码就声明了一个完整的 react-redux 的例子, 拥抱 hooks。
 
 ```js
 import React from 'react';
 import ReactHookRedux from 'react-hooks-redux';
 
+// 通过 ReactHookRedux 获得 Provider 组件和一个 sotre 对象
 const { Provider, store } = ReactHookRedux({
   isDev: true, // 打印日志
   initialState: { name: 'dog', age: 0 },
@@ -54,14 +131,13 @@ function actionOfAdd() {
   return {
     type: 'add the count',
     reducer(state) {
-      return { ...state, age: state.age + 1 };
+      return { ...state, age: state.age + 1 }; // 每次需要返回一个新的 state
     },
   };
 }
 
 setInterval(() => {
-  // 这行代码可以放到其他组件，在需要的时候进行派发更新
-  store.dispatch(actionOfAdd());
+  store.dispatch(actionOfAdd()); // 这行代码可以放到其他组件，在需要的时候进行派发更新
 }, 500);
 
 function Page() {
@@ -80,7 +156,9 @@ export default function App() {
 
 ## middleware 的编写
 
-middleware 是一个一维数组，数组中每个对象都是一个函数, 传入了参数并且如果返回的对象存在, 就会替换成 nextState 并且继续执行下一个 middleware。我们可以使用 middleware 进行打印日志、编写插件或者二次处理 state 等操作。
+绝大部分情况，你不需要编写middleware, 不过它也极其简单。middleware 是一个一维数组，数组中每个对象都是一个函数, 传入了参数并且如果返回的对象存在, 就会替换成 nextState 并且继续执行下一个 middleware。
+
+我们可以使用 middleware 进行打印日志、编写chrome插件或者二次处理 state 等操作。
 
 我们看看 middleware 的源码:
 
@@ -95,8 +173,9 @@ for (let i = 0; i < middleware.length; i++) {
 return nextState;
 ```
 
-
 ## 性能和注意的事项
+
+性能(和实现上)上最大的区别是，react-hooks-redux 使用 useConnect 钩子代替 connect 高阶组件进行 dispatch的派发。
 
 在传统的 react-redux 中，如果一个组件被 connect 高阶函数进行处理，那么当 dispatch 时，这个组件相关的 mapStateToProps 函数就会被执行，并且返回新的 props 以激活组件更新。
 
@@ -108,11 +187,9 @@ return nextState;
 
 如果我们需要手动控制减少更新 可以参考 [useMemo](https://reactjs.org/docs/hooks-reference.html#usememo) 钩子的使用方式进行配合。
 
-以上都是理论分析，由于该库和此文档是一个深夜的产物，并没有去做性能上的基准测试，所以有人如果愿意非常欢迎帮忙做一些基准测试。
+以上都是理论分析，由于此库和此文档是一个深夜的产物，并没有去做性能上的基准测试，所以有人如果愿意非常欢迎帮忙做一些基准测试。
 
-## 完整例子
-
-此例子演示了同步和异步 action, 和参数默认值
+## 完整的组件操作及异步action的例子
 
 ```js
 import React from 'react';
