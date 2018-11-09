@@ -1,40 +1,27 @@
 import React, { useReducer, useContext, createContext } from 'react';
 
 let devLogSty = `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`;
-export function devLog(type, oldState, nextState) {
-  console.info(`%c|------- redux: ${type} -------|`, devLogSty);
+export function devLog(oldState, nextState, action) {
+  console.info(`%c|------- redux: ${action.type} -------|`, devLogSty);
   console.info('|--last:', oldState);
   console.info('|--next:', nextState);
 }
 
 export function reducerInAction(state, action) {
-  if (action.callback) {
-    const nextState = action.callback(state);
-    return nextState;
+  if (action.reducer) {
+    return action.reducer(state);
   }
   return state;
 }
 
 export default function createStore(reducer, initialState = {}, middleware) {
-  function reducer(state, action) {
-    if (action.reducer) {
-      const nextState = action.reducer(state);
-      if (middleware) {
-        for (const k in middleware) {
-          middleware[k](action.type, state, nextState);
-        }
-      }
-      return nextState;
-    }
-    return state;
-  }
   let realReducer;
   if (middleware) {
     realReducer = function(state, action) {
       const nextState = reducer(state, action);
       if (middleware) {
         for (const k in middleware) {
-          middleware[k](action.type, state, nextState);
+          middleware[k](state, nextState, action);
         }
       }
       return nextState;
