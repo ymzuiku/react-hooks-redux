@@ -1,9 +1,8 @@
-import React, { useReducer, useContext, createContext } from 'react';
+import React from 'react';
 
-let devLogSty = `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`;
 export function devLog(isDev, oldState, nextState, action) {
   if (isDev) {
-    console.log(`%c|------- redux: ${action.type} -------|`, devLogSty);
+    console.log(`%c|------- redux: ${action.type} -------|`, `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`);
     console.log('|--last:', oldState);
     console.log('|--next:', nextState);
   }
@@ -25,10 +24,10 @@ export default function createStore(params) {
     middleware: { devLog },
     ...params,
   };
-  const AppContext = createContext();
+  const AppContext = React.createContext();
   const store = {
     useContext: function() {
-      return useContext(AppContext);
+      return React.useContext(AppContext);
     },
     actions,
     dispatch: undefined,
@@ -51,7 +50,7 @@ export default function createStore(params) {
   }
 
   function Provider(props) {
-    const [state, dispatch] = useReducer(realReducer, initialState);
+    const [state, dispatch] = React.useReducer(realReducer, initialState);
     if (!store.dispatch) {
       store.dispatch = async function(action) {
         if (typeof action === 'function') {
