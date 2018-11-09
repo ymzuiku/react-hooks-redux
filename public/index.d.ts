@@ -13,6 +13,7 @@ interface IReactHooksRedux {
   store: IStore;
 }
 interface IParams {
+  isDev: Boolean;
   reducer: (state: Object, action: Function) => Object;
   initialState: Object;
   actions: Object;

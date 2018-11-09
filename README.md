@@ -4,18 +4,20 @@ import React from 'react';
 import ReactHookRedux, { reducerInAction, devLog } from 'react-hooks-redux';
 
 const { Provider, store } = ReactHookRedux({
-  reducer: reducerInAction,
-  initialState: {
-    count: 0,
-    asyncCount: 0,
-  },
-  middleware: { devLog },
+  isDev: true, // default is false
+  initialState: { count: 0, asyncCount: 0 }, // default is {}
+  reducer: reducerInAction, // default is 'reducerInAction'
+  middleware: { devLog }, // default is { devLog }
 });
+
+// So you can use this code, ignore default params
+// const { Provider, store } = ReactHookRedux({ isDev: true, initialState: { count: 0, asyncCount: 0 } });
 
 const actions = {
   add: () => {
     return {
       type: 'add',
+      // if use reducerInAction, we can add reducer Function repeat reducer
       reducer(state) {
         return {
           ...state,
@@ -24,10 +26,12 @@ const actions = {
       },
     };
   },
+  // if return a function, we can add use lick react-thunk
   asyncAdd: () => async (dispatch, ownState) => {
     const asyncCount = await testFetchAdd(ownState.asyncCount);
     dispatch({
       type: 'asyncAdd',
+      // if use reducerInAction, we can add reducer Function repeat reducer
       reducer(state) {
         return {
           ...state,
@@ -39,6 +43,7 @@ const actions = {
 };
 
 function Item() {
+  // use the useContext get the store.getState();
   const state = store.useContext();
   return (
     <>
@@ -50,18 +55,17 @@ function Item() {
 
 function Button() {
   async function handleAdd() {
+    // use dispatch
     store.dispatch(actions.add());
+    // use async dispatch
     await store.dispatch(actions.asyncAdd());
-    console.log('waited asyncAdd');
   }
   return (
-    <div>
-      <div onClick={handleAdd}>add</div>
-    </div>
+    <button onClick={handleAdd}>add</button>
   );
 }
 
-export default () => {
+export default function() {
   return (
     <Provider>
       <Item />
@@ -72,13 +76,12 @@ export default () => {
 
 // --- test function
 
-const testFetchAdd = a => {
+function testFetchAdd (a) {
   return new Promise(cb => {
     setTimeout(() => {
       cb(a + 1);
     }, 600);
   });
 };
-
 
 ```

@@ -1,10 +1,12 @@
 import React, { useReducer, useContext, createContext } from 'react';
 
 let devLogSty = `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`;
-export function devLog(oldState, nextState, action) {
-  console.info(`%c|------- redux: ${action.type} -------|`, devLogSty);
-  console.info('|--last:', oldState);
-  console.info('|--next:', nextState);
+export function devLog(isDev, oldState, nextState, action) {
+  if (isDev) {
+    console.log(`%c|------- redux: ${action.type} -------|`, devLogSty);
+    console.log('|--last:', oldState);
+    console.log('|--next:', nextState);
+  }
 }
 
 export function reducerInAction(state, action) {
@@ -15,11 +17,12 @@ export function reducerInAction(state, action) {
 }
 
 export default function createStore(params) {
-  const { reducer, initialState, actions, middleware } = {
+  const { isDev, reducer, initialState, actions, middleware } = {
+    isDev: false,
     reducer: reducerInAction,
     initialState: {},
     actions: {},
-    middleware: undefined,
+    middleware: { devLog },
     ...params,
   };
   const AppContext = createContext();
@@ -38,7 +41,7 @@ export default function createStore(params) {
       const nextState = reducer(state, action);
       if (middleware) {
         for (const k in middleware) {
-          middleware[k](state, nextState, action);
+          middleware[k](isDev, state, nextState, action);
         }
       }
       return nextState;
