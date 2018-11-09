@@ -1,13 +1,10 @@
 import React, { useReducer, useContext, createContext } from 'react';
 
 let devLogSty = `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`;
-const isDev = process.env.NODE_ENV === 'development';
 export function devLog(type, oldState, nextState) {
-  if (isDev) {
-    console.info(`%c|------- redux: ${type} -------|`, devLogSty);
-    console.info('|--last:', oldState);
-    console.info('|--next:', nextState);
-  }
+  console.info(`%c|------- redux: ${type} -------|`, devLogSty);
+  console.info('|--last:', oldState);
+  console.info('|--next:', nextState);
 }
 
 export function reducerInAction(state, action) {
@@ -60,7 +57,7 @@ export default function createStore(reducer, initialState = {}, middleware) {
     if (!store.dispatch) {
       store.dispatch = async function(action) {
         if (typeof action === 'function') {
-          dispatch(action(dispatch, store.state));
+          await action(dispatch, store.state);
         } else {
           dispatch(action);
         }
