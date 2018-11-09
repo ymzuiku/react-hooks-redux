@@ -4,7 +4,7 @@
 
 ## 原由
 
-react-hooks 是 react 未来的编写推荐，此库在官方的 useReducer 钩子上进行一层很简单的封装以达到和以往 react-redux \ redux-thunk \ redux-logger 类似的功能，并且大幅度简化了声明。
+react-hooks 是 react 官方新的编写推荐，此库在官方的 useReducer 钩子上进行一层很简单的封装以达到和以往 react-redux \ redux-thunk \ redux-logger 类似的功能，并且大幅度简化了声明。
 
 react-hooks 的更多信息请阅读 [reactjs.org/hooks](reactjs.org/hooks);
 
@@ -28,7 +28,7 @@ function reducerInAction(state, action) {
 }
 ```
 
-它把 reducer 给简化了，放置到了每一个 action 中进行 reducer 的处理
+它把 reducer 给简化了，放置到了每一个 action 中进行 reducer 的处理。我们再也不需要写一堆Switch，并且时刻关注 action 的 type 是否和 redcer 中的 type 一致。
 
 reducer-in-action 配合 thunk 风格，可以非常简单的编写 redux，随着项目的复杂，我们只需要编写action，会使得项目结构更清晰。
 
@@ -68,6 +68,20 @@ export default function App() {
   return <Provider><Page /></Provider>;
 }
 ```
+
+## 性能和注意的事项
+
+在传统的 react-redux 中，如果一个组件被 connect 高阶函数进行处理，那么当 dispatch 时，这个组件相关的 mapStateToProps 函数就会被执行，并且返回新的props以激活组件更新。
+
+而在 hooks 风格中，当一个组件被声明了 useContext() 时，context相关联的对象被变更了，这个组件会进行更新。
+
+理论上性能和 react-redux 是一致的，由于 hooks 相对于 class 有着更少的声明，所以应该会更快一些。
+
+所以，我们有节制的使用 useContext 可以减少一一些组件被 dispatch 派发更新。
+
+如果我们需要手动控制减少更新 可以参考 [useMemo](https://reactjs.org/docs/hooks-reference.html#usememo) 钩子的使用方式进行配合。
+
+以上都是理论分析，由于该库和此文档是一个深夜的产物，并没有去做性能上的基准测试，所以有人如果愿意非常欢迎帮忙做一些基准测试。
 
 ## 完整例子
 
@@ -156,8 +170,6 @@ function testFetchAdd(a) {
   });
 }
 ```
-
-以上就是全部
 
 ## Licenes
 
