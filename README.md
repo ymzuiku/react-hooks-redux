@@ -8,10 +8,9 @@ react-hooks 是 react 官方新的编写推荐，此库在官方的 useReducer �
 
 react-hooks 的更多信息请阅读 [reactjs.org/hooks](reactjs.org/hooks);
 
-
 ## 特性
 
-- 非常小，只有11k，gzip之后只有3.9k
+- 非常小，只有 11k，gzip 之后只有 3.9k
 - 已经内置了 reduc-thunk 和 redux-logger
 - 默认可以不创建 reducer，使用 reducer-in-action 的风格, 也可声明传统的 reducer 风格
 
@@ -28,20 +27,26 @@ function reducerInAction(state, action) {
 }
 ```
 
-它把 reducer 给简化了，放置到了每一个 action 中进行 reducer 的处理。我们再也不需要写一堆Switch，并且时刻关注 action 的 type 是否和 redcer 中的 type 一致。
+它把 reducer 给简化了，放置到了每一个 action 中进行 reducer 的处理。我们再也不需要写一堆 Switch，并且时刻关注 action 的 type 是否和 redcer 中的 type 一致。
 
-reducer-in-action 配合 thunk 风格，可以非常简单的编写 redux，随着项目的复杂，我们只需要编写action，会使得项目结构更清晰。
+reducer-in-action 配合 thunk 风格，可以非常简单的编写 redux，随着项目的复杂，我们只需要编写 action，会使得项目结构更清晰。
 
 ## 使用
 
-我们只用了30行代码就声明了一个react-redux的例子, 拥抱hooks。
+安装
+
+```js
+yarn add react-hooks-redux
+```
+
+我们只用了 30 行代码就声明了一个完整的 react-redux 的例子, 拥抱 hooks。
 
 ```js
 import React from 'react';
 import ReactHookRedux from 'react-hooks-redux';
 
 const { Provider, store } = ReactHookRedux({
-  isDev: true,
+  isDev: true, // 打印日志
   initialState: { name: 'dog', age: 0 },
 });
 
@@ -55,7 +60,7 @@ function actionOfAdd() {
 }
 
 setInterval(() => {
-  console.log('aa');
+  // 这行代码可以放到其他组件，在需要的时候进行派发更新
   store.dispatch(actionOfAdd());
 }, 500);
 
@@ -65,15 +70,37 @@ function Page() {
 }
 
 export default function App() {
-  return <Provider><Page /></Provider>;
+  return (
+    <Provider>
+      <Page />
+    </Provider>
+  );
 }
 ```
 
+## middleware 的编写
+
+middleware 是一个一维数组，数组中每个对象都是一个函数, 传入了参数并且如果返回的对象存在, 就会替换成 nextState 并且继续执行下一个 middleware。我们可以使用 middleware 进行打印日志、编写插件或者二次处理 state 等操作。
+
+我们看看 middleware 的源码:
+
+```js
+let nextState = reducer(lastState, action);
+for (let i = 0; i < middleware.length; i++) {
+  const newState = middleware[i](lastState, nextState, action, isDev);
+  if (newState) {
+    nextState = newState;
+  }
+}
+return nextState;
+```
+
+
 ## 性能和注意的事项
 
-在传统的 react-redux 中，如果一个组件被 connect 高阶函数进行处理，那么当 dispatch 时，这个组件相关的 mapStateToProps 函数就会被执行，并且返回新的props以激活组件更新。
+在传统的 react-redux 中，如果一个组件被 connect 高阶函数进行处理，那么当 dispatch 时，这个组件相关的 mapStateToProps 函数就会被执行，并且返回新的 props 以激活组件更新。
 
-而在 hooks 风格中，当一个组件被声明了 useContext() 时，context相关联的对象被变更了，这个组件会进行更新。
+而在 hooks 风格中，当一个组件被声明了 useContext() 时，context 相关联的对象被变更了，这个组件会进行更新。
 
 理论上性能和 react-redux 是一致的，由于 hooks 相对于 class 有着更少的声明，所以应该会更快一些。
 
@@ -85,7 +112,7 @@ export default function App() {
 
 ## 完整例子
 
-内容均在此代码中，可以拷贝替换 create-react-app 项目的 App.js 进行执行，并阅读其中注释。
+此例子演示了同步和异步 action, 和参数默认值
 
 ```js
 import React from 'react';
@@ -97,7 +124,8 @@ const { Provider, store } = ReactHookRedux({
   isDev: true, // default is false
   initialState: { count: 0, asyncCount: 0 }, // default is {}
   reducer: reducerInAction, // default is reducerInAction 所以可省略
-  middleware: { devLog }, // default is { devLog } 所以可省略
+  middleware: [devLog], // default is [devLog] 所以可省略
+  actions: {} // default is {} 所以可省略
 });
 
 const actions = {
@@ -174,7 +202,6 @@ function testFetchAdd(a) {
 ## Licenes
 
 ```
-
 MIT License
 
 Copyright (c) 2013-present, Facebook, Inc.
