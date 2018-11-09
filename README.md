@@ -3,11 +3,14 @@
 import React from 'react';
 import ReactHookRedux, { reducerInAction, devLog } from 'react-hooks-redux';
 
-const initialState = {
-  count: 0,
-  asyncCount: 0,
-};
-const { Provider, store } = ReactHookRedux(reducerInAction, initialState, { devLog });
+const { Provider, store } = ReactHookRedux({
+  initialState: {
+    count: 0,
+    asyncCount: 0,
+  },
+  reducer: reducerInAction,
+  middleware: { devLog },
+});
 
 const actions = {
   add: () => {
@@ -48,7 +51,7 @@ function Item() {
 function Button() {
   async function handleAdd() {
     store.dispatch(actions.add());
-    store.dispatch(await actions.asyncAdd());
+    await store.dispatch(actions.asyncAdd());
     console.log('waited asyncAdd');
   }
   return (

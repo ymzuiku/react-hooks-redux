@@ -14,7 +14,24 @@ export function reducerInAction(state, action) {
   return state;
 }
 
-export default function createStore(reducer, initialState = {}, middleware) {
+export default function createStore(params) {
+  const { reducer, initialState, actions, middleware } = {
+    reducer: reducerInAction,
+    initialState: {},
+    actions,
+    middleware: undefined,
+    ...params,
+  };
+  const AppContext = createContext();
+  const store = {
+    useContext: function() {
+      return useContext(AppContext);
+    },
+    actions,
+    dispatch: undefined,
+    state: initialState,
+    initialState,
+  };
   let realReducer;
   if (middleware) {
     realReducer = function(state, action) {
@@ -30,15 +47,6 @@ export default function createStore(reducer, initialState = {}, middleware) {
     realReducer = reducer;
   }
 
-  const AppContext = createContext();
-  const store = {
-    useContext: function() {
-      return useContext(AppContext);
-    },
-    dispatch: undefined,
-    state: initialState,
-    initialState,
-  };
   function Provider(props) {
     const [state, dispatch] = useReducer(realReducer, initialState);
     if (!store.dispatch) {
