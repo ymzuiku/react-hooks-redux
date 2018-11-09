@@ -12,8 +12,19 @@ interface IReactHooksRedux {
   Provider: React.Component;
   store: IStore;
 }
+interface IParams {
+  reducer: (state: Object, action: Function) => Object;
+  initialState: Object;
+  actions: Object;
+  middleware: Object | undefined;
+}
 
-declare const ReactHooksRedux: IReactHooksRedux;
+declare function ReactHooksRedux(params: IParams): IReactHooksRedux;
 
-export function devLog();
-export function reducerInAction();
+export function devLog(
+  oldState: Object,
+  nextState: Object,
+  action: Object,
+): void;
+
+export function reducerInAction(state: Object, action: Function): Object;
