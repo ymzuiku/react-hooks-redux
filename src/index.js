@@ -61,7 +61,7 @@ export function createDevLogFromImmutable(...args) {
         `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
       );
       console.log('|--diff:', data[0]);
-      console.log('|--next:', data[1]);
+      console.log('|--merge:', data[1]);
     }
   };
 }
