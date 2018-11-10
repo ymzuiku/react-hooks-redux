@@ -18,14 +18,14 @@ export function reducerInAction(state, action) {
   return state;
 }
 
-export default function createStore(params) {
+export default function createStore(options) {
   const { isDev, reducer, initialState, actions, middleware } = {
     isDev: false,
     reducer: reducerInAction,
     initialState: {},
     actions: {},
     middleware: [devLog],
-    ...params,
+    ...options,
   };
   const AppContext = React.createContext();
   const store = {
@@ -53,7 +53,7 @@ export default function createStore(params) {
     realReducer = reducer;
   }
 
-  const Provider = props => {
+  function Provider(props) {
     const [state, dispatch] = React.useReducer(realReducer, initialState);
     if (!store.dispatch) {
       store.dispatch = async function(action) {
@@ -66,6 +66,6 @@ export default function createStore(params) {
     }
     store.state = state;
     return <AppContext.Provider {...props} value={state} />;
-  };
+  }
   return { Provider, store };
 }
