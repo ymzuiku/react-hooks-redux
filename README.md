@@ -257,8 +257,7 @@ import { Map } from 'immutable';
 const { Provider, store } = ReactHookRedux({
   isDev: true, // 打印日志
   initialState: Map({ products: ['iPhone'] }),
-  // createDevLogFromImmutable，使用getIn去获取打印的对象, 可以有效的规避toJS的性能开销
-  // 点是我们需要提前声明需要打印的对象路径
+  // createDevLogFromImmutable，提前声明getIn对象，可以有效的规避toJS的性能开销
   middleware: [createDevLogFromImmutable('products')], // 例子 createDevLogFromImmutable('user', ['data', 'local'], 'ui', 'products');
 });
 
