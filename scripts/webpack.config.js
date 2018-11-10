@@ -15,13 +15,6 @@ module.exports = {
     filename: 'index.js',
     chunkFilename: '[name]_.chunk.js',
   },
-  // externals: {
-  //   react: 'React',
-  //   'react-dom': 'react-dom',
-  //   'react-router': 'react-router',
-  //   history: 'history',
-  //   'react-spring': 'react-spring',
-  // },
   externals: [nodeExternals()],
   resolve: {
     extensions: tip.resolve.extensions,

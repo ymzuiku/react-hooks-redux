@@ -172,7 +172,7 @@ return nextState;
 
 ## 性能和注意的事项
 
-性能(和实现上)上最大的区别是，react-hooks-redux 使用 useConnect 钩子代替 connect 高阶组件进行 dispatch的派发。
+性能(和实现上)上最大的区别是，react-hooks-redux 使用 useContext 钩子代替 connect 高阶组件进行 dispatch的派发。
 
 在传统的 react-redux 中，如果一个组件被 connect 高阶函数进行处理，那么当 dispatch 时，这个组件相关的 mapStateToProps 函数就会被执行，并且返回新的 props 以激活组件更新。
 
