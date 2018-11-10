@@ -180,7 +180,7 @@ return nextState;
 
 理论上性能和 react-redux 是一致的，由于 hooks 相对于 class 有着更少的声明，所以应该会更快一些。
 
-所以，我们有节制的使用 useContext 可以减少一一些组件被 dispatch 派发更新。
+所以，我们有节制的使用 useContext 可以减少一些组件被 dispatch 派发更新。
 
 如果我们需要手动控制减少更新 可以参考 [useMemo](https://reactjs.org/docs/hooks-reference.html#usememo) 钩子的使用方式进行配合。
 
@@ -241,6 +241,68 @@ export default function App() {
     <Provider>
       <Item />
       <Button />
+    </Provider>
+  );
+}
+
+```
+
+## 使用 immutableJS 配合 useCallback 减少重渲染的例子
+
+```js
+import React, { useCallback } from 'react';
+import ReactHookRedux, { createDevLogFromImmutable } from 'react-hooks-redux';
+import { Map } from 'immutable';
+
+const { Provider, store } = ReactHookRedux({
+  isDev: true, // 打印日志
+  initialState: Map({ products: ['iPhone'] }),
+  // createDevLogFromImmutable，使用getIn去获取打印的对象, 可以有效的规避toJS的性能开销
+  // 点是我们需要提前声明需要打印的对象路径
+  middleware: [createDevLogFromImmutable('products')], // 例子 createDevLogFromImmutable('user', ['data', 'local'], 'ui', 'products');
+});
+
+function actionAddProduct(product) {
+  return {
+    type: 'add the product',
+    reducer(state) {
+      return state.update('products', p => {
+        p.push(product);
+        return [...p];
+      });
+    },
+  };
+}
+
+let num = 0;
+function Button() {
+  function handleAdd() {
+    num += 1;
+    store.dispatch(actionAddProduct('iPhone' + num)); //dispatch
+  }
+  return <button onClick={handleAdd}>add-product</button>;
+}
+
+function Page() {
+  const state = store.useContext();
+  // 从immutable获取对象，如果products未改变，会从堆中获取而不是重新生成新的数组
+  const products = state.get('products');
+
+  return useCallback(
+    <div>
+      <Button />
+      {products.map(v => (
+        <div>{v}</div>
+      ))}
+    </div>,
+    [products], // 如果products未发生改变，不会进行进行重渲染
+  );
+}
+
+export default function App() {
+  return (
+    <Provider>
+      <Page />
     </Provider>
   );
 }
