@@ -107,7 +107,7 @@ reducer-in-action 配合 thunk 风格，可以非常简单的编写 redux，随�
 
 ## 使用
 
-安装 'react-hooks-redux', 需要 react 版本 >= 16.7
+安装 [react-hooks-redux](https://github.com/ymzuiku/react-hooks-redux), 需要 react 版本 >= 16.7
 
 ```js
 yarn add react-hooks-redux
