@@ -1,4 +1,5 @@
 const tip = require('./webpack.tip')();
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
   target: 'web',
@@ -14,13 +15,14 @@ module.exports = {
     filename: 'index.js',
     chunkFilename: '[name]_.chunk.js',
   },
-  externals: {
-    react: 'react',
-    'react-dom': 'react-dom',
-    'react-router': 'react-router',
-    history: 'history',
-    'react-spring': 'react-spring',
-  },
+  // externals: {
+  //   react: 'React',
+  //   'react-dom': 'react-dom',
+  //   'react-router': 'react-router',
+  //   history: 'history',
+  //   'react-spring': 'react-spring',
+  // },
+  externals: [nodeExternals()],
   resolve: {
     extensions: tip.resolve.extensions,
     alias: tip.resolve.alias,

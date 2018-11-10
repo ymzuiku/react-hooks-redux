@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function devLog(lastState, nextState, action, isDev) {
+function devLog(lastState, nextState, action, isDev) {
   if (isDev) {
     console.log(
       `%c|------- redux: ${action.type} -------|`,
@@ -11,21 +11,21 @@ export function devLog(lastState, nextState, action, isDev) {
   }
 }
 
-export function reducerInAction(state, action) {
+function reducerInAction(state, action) {
   if (typeof action.reducer === 'function') {
     return action.reducer(state);
   }
   return state;
 }
 
-export default function createStore(options) {
+export default function createStore(params) {
   const { isDev, reducer, initialState, actions, middleware } = {
     isDev: false,
     reducer: reducerInAction,
     initialState: {},
     actions: {},
-    middleware: [devLog],
-    ...options,
+    middleware: params.isDev ? [devLog] : undefined,
+    ...params,
   };
   const AppContext = React.createContext();
   const store = {
@@ -53,7 +53,7 @@ export default function createStore(options) {
     realReducer = reducer;
   }
 
-  function Provider(props) {
+  const Provider = props => {
     const [state, dispatch] = React.useReducer(realReducer, initialState);
     if (!store.dispatch) {
       store.dispatch = async function(action) {
@@ -66,6 +66,6 @@ export default function createStore(options) {
     }
     store.state = state;
     return <AppContext.Provider {...props} value={state} />;
-  }
+  };
   return { Provider, store };
 }

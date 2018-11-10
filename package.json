@@ -1,6 +1,6 @@
 {
   "name": "react-hooks-redux",
-  "version": "0.9.17",
+  "version": "0.9.19",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
@@ -9,7 +9,6 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "react": "^16.7.0-alpha.0",
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-class-properties": "^7.0.0",
     "@babel/plugin-proposal-decorators": "^7.0.0",
@@ -47,6 +46,7 @@
     "postcss-flexbugs-fixes": "^3.3.1",
     "postcss-loader": "^2.1.5",
     "pre-commit": "^1.2.2",
+    "react": "^16.7.0-alpha.0",
     "react-dev-utils": "^5.0.2",
     "react-dom": "^16.5.1",
     "react-hot-loader": "^4.3.3",
@@ -60,7 +60,8 @@
     "url-loader": "^1.0.1",
     "webpack": "^4.16.1",
     "webpack-cli": "^3.1.0",
-    "webpack-dev-server": "^3.1.7"
+    "webpack-dev-server": "^3.1.7",
+    "webpack-node-externals": "^1.7.2"
   },
   "repository": {
     "type": "git",
