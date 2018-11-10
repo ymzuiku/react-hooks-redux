@@ -151,6 +151,18 @@ export default function App() {
 }
 ```
 
+总结一下：
+
+- 准备
+  - 使用 ReactHookRedux 创建 Provider 组件 和 store 对象
+  - 使用Provider包裹根组件
+- 使用
+  - 在需要使用状态的地方 使用 store.useContext() 获取 store中的state
+  - 使用 store.dispatch(action()) 派发更新
+
+
+我们阅读这个小例子会发现，没有对组件进行 connect, 没有编写 reducer 函数, 这么简化设计是为了迎合 hooks, hooks 极大的简化了我们编写千篇一律的类模板，但是如果我们还是需要对组件进行 connect, 我们又回到了编写模板代码的老路。
+
 ## middleware 的编写
 
 绝大部分情况，你不需要编写middleware, 不过它也极其简单。middleware 是一个一维数组，数组中每个对象都是一个函数, 传入了参数并且如果返回的对象存在, 就会替换成 nextState 并且继续执行下一个 middleware。
