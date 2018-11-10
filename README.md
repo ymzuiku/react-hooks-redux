@@ -107,7 +107,7 @@ reducer-in-action 配合 thunk 风格，可以非常简单的编写 redux，随�
 
 ## 使用
 
-安装, 您甚至可以将上面那70行代码拷贝至项目中, 需要 react 版本 >= 16.7
+安装 'react-hooks-redux', 需要 react 版本 >= 16.7
 
 ```js
 yarn add react-hooks-redux
@@ -186,6 +186,8 @@ return nextState;
 
 以上都是理论分析，由于此库和此文档是一个深夜的产物，并没有去做性能上的基准测试，所以有人如果愿意非常欢迎帮忙做一些基准测试。
 
+# 其他例子
+
 ## 异步action的例子
 
 ```js
@@ -247,7 +249,7 @@ export default function App() {
 
 ```
 
-## 使用 immutableJS 配合 useCallback 减少重渲染的例子
+## 使用 immutableJS 配合 hooks 减少重渲染的例子
 
 ```js
 import React, { useCallback } from 'react';
@@ -258,7 +260,8 @@ const { Provider, store } = ReactHookRedux({
   isDev: true, // 打印日志
   initialState: Map({ products: ['iPhone'] }),
   // createDevLogFromImmutable，提前声明getIn对象，可以有效的规避toJS的性能开销
-  middleware: [createDevLogFromImmutable('products')], // 例子 createDevLogFromImmutable('user', ['data', 'local'], 'ui', 'products');
+  // 例如 createDevLogFromImmutable('user', ['data', 'local'], 'ui', 'products');
+  middleware: [createDevLogFromImmutable('products')],
 });
 
 function actionAddProduct(product) {
