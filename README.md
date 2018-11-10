@@ -101,7 +101,7 @@ function reducerInAction(state, action) {
 }
 ```
 
-它把 reducer 给简化了，放置到了每一个 action 中进行 reducer 的处理。我们再也不需要写一堆 switch，并且时刻关注 action 的 type 是否和 redcer 中的 type 一致。
+它把 reducer 给简化了，放置到了每一个 action 中进行 reducer 的处理。我们再也不需要写一堆 switch，再也不需要时刻关注 action 的 type 是否和 redcer 中的 type 一致。
 
 reducer-in-action 配合 thunk 风格，可以非常简单的编写 redux，随着项目的复杂，我们只需要编写 action，会使得项目结构更清晰。
 
