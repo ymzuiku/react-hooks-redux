@@ -208,6 +208,8 @@ return nextState;
 
 # 其他例子
 
+随着工作的进展，额外增加了一些功能，如使用 autoSave 约定进行 state 的缓存和读取，middlewareLog 可以打印 immutable 对象等和状态管理相关的功能。
+
 ## 异步 action 并且缓存state到浏览器的例子
 
 ```js
