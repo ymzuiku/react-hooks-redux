@@ -101,15 +101,12 @@ export default function App() {
 
 ```js
 import React, { useCallback } from 'react';
-import ReactHookRedux, { createDevLogFromImmutable } from 'react-hooks-redux';
+import ReactHookRedux from 'react-hooks-redux';
 import { Map } from 'immutable';
 
 const { Provider, store } = ReactHookRedux({
   isDev: true,
   initialState: Map({ products: ['iPhone'] }),
-  // createDevLogFromImmutable，use getIn replate toJS
-  // example: createDevLogFromImmutable('user', ['data', 'local'], 'ui', 'products');
-  middleware: [createDevLogFromImmutable('products')],
 });
 
 function actionAddProduct(product) {

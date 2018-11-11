@@ -69,6 +69,7 @@ export default function createStore(options = defalutOptions) {
         }
       }
     }
+    store._state = nextState;
     runSubscribes(action, nextState);
     return nextState;
   };
@@ -86,7 +87,6 @@ export default function createStore(options = defalutOptions) {
         }
       };
     }
-    store._state = state;
     React.useEffect(() => {
       for (let i = 0; i < store.onload.length; i++) {
         store.onload[i]();
@@ -185,15 +185,14 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
         if (lastDatas[v] !== nowDatas[v]) {
           isNeedSave = true;
         }
+        lastDatas[v] = nowDatas[v];
       });
       if (isNeedSave) {
         storage.save(nowDatas);
-        needSaveKeys.forEach(v => {
-          lastDatas[v] = nowDatas[v];
-        });
       }
     } else {
       // 非immutable做浅比较判断是否需要保存
+      console.log('kk', state);
       const nowDatas = {};
       let isNeedSave = true;
       needSaveKeys.forEach(v => {
@@ -201,12 +200,13 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
         if (lastDatas[v] !== nowDatas[v]) {
           isNeedSave = true;
         }
+        lastDatas[v] = nowDatas[v];
       });
       if (isNeedSave) {
         storage.save(nowDatas);
-        needSaveKeys.forEach(v => {
-          lastDatas[v] = nowDatas[v];
-        });
+        // needSaveKeys.forEach(v => {
+        //   lastDatas[v] = nowDatas[v];
+        // });
       }
     }
   });
@@ -214,71 +214,56 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
 
 export function middlewareLog(store, lastState, nextState, action) {
   if (store.isDev) {
-    console.log(
-      `%c|------- redux: ${action.type} -------|`,
-      `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
-    );
     if (lastState && typeof lastState.toJS === 'function') {
-      console.log('|--last:', lastState.toJS());
+      middlewareImmutableLog(store, lastState, nextState, action);
     } else {
+      console.log(
+        `%c|------- redux: ${action.type} -------|`,
+        `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
+      );
       console.log('|--last:', lastState);
-    }
-    if (nextState && typeof nextState.toJS === 'function') {
-      console.log('|--next:', nextState.toJS());
-    } else {
       console.log('|--next:', nextState);
     }
   }
 }
 
-export function middlewareImmutableLog(...args) {
-  if (!args || args.length === 0) {
-    throw new Error('middlewareImmutableLog: no have immutable keys');
+export function middlewareImmutableLog(store, lastState, nextState, action) {
+  if (store.isDev) {
+    let data;
+    if (nextState === undefined || !nextState.toJS) {
+      data = [lastState, nextState];
+    } else {
+      data = getImmerForKeys(lastState, nextState);
+    }
+    console.log(
+      `%c|------- redux: ${action.type} -------|`,
+      `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
+    );
+    console.log('|--diff:', data[0]);
+    console.log('|--merge:', data[1]);
   }
-  function getImmerForKeys(last, next, ks) {
-    const endDiff = {};
-    const endNext = {};
-    for (let i = 0; i < ks.length; i++) {
-      let d1, d2;
-      if (Object.prototype.toString.call(ks[i]) === '[object Array]') {
-        d1 = last.getIn(ks[i]);
-        d2 = next.getIn(ks[i]);
-      } else {
-        d1 = last.get(ks[i]);
-        d2 = next.get(ks[i]);
-      }
-      if (d1 !== d2) {
-        if (Object.prototype.toString.call(d2) === '[object Object]') {
-          endDiff[ks[i]] = {};
-          for (const k in d2) {
-            const sub1 = last.getIn([ks[i], k]);
-            const sub2 = last.getIn([ks[i], k]);
-            if (sub1 !== sub2) {
-              endDiff[ks[i]][k] = sub2;
-            }
+}
+
+function getImmerForKeys(last, next) {
+  const endDiff = {};
+  const endNext = {};
+  last.map((d1, k) => {
+    const d2 = next.get(k);
+    if (d1 !== d2) {
+      if (Object.prototype.toString.call(d2) === '[object Object]') {
+        endDiff[k] = {};
+        for (const ks in d2) {
+          const sub1 = last.getIn([k, ks]);
+          const sub2 = next.getIn([k, ks]);
+          if (sub1 !== sub2) {
+            endDiff[k][ks] = sub2;
           }
-        } else {
-          endDiff[ks[i]] = d2;
         }
-      }
-      endNext[ks[i]] = d2;
-    }
-    return [endDiff, endNext];
-  }
-  return function(store, lastState, nextState, action) {
-    if (store.isDev) {
-      let data;
-      if (nextState === undefined || !nextState.toJS) {
-        data = [lastState, nextState];
       } else {
-        data = getImmerForKeys(lastState, nextState, args);
+        endDiff[k] = d2;
       }
-      console.log(
-        `%c|------- redux: ${action.type} -------|`,
-        `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
-      );
-      console.log('|--diff:', data[0]);
-      console.log('|--merge:', data[1]);
     }
-  };
+    endNext[k] = d2;
+  });
+  return [endDiff, endNext];
 }

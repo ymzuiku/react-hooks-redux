@@ -208,7 +208,7 @@ return nextState;
 
 # 其他例子
 
-## 异步 action 的例子
+## 异步 action 并且缓存state到浏览器的例子
 
 ```js
 import React from 'react';
@@ -221,6 +221,10 @@ const { Provider, store } = ReactHookRedux({
   reducer: reducerInAction, // default is reducerInAction 所以可省略
   middleware: [devLog], // default is [devLog] 所以可省略
   actions: {}, // default is {} 所以可省略
+  autoSave: {
+    item: 'localSaveKey',
+    keys: ['user'], // 需要缓存的字段
+  },
 });
 
 // 模拟异步操作
@@ -272,15 +276,12 @@ export default function App() {
 
 ```js
 import React, { useCallback } from 'react';
-import ReactHookRedux, { createDevLogFromImmutable } from 'react-hooks-redux';
+import ReactHookRedux from 'react-hooks-redux';
 import { Map } from 'immutable';
 
 const { Provider, store } = ReactHookRedux({
-  isDev: true, // 打印日志
-  initialState: Map({ products: ['iPhone'] }),
-  // createDevLogFromImmutable，提前声明getIn对象，可以有效的规避toJS的性能开销
-  // 例如 createDevLogFromImmutable('user', ['data', 'local'], 'ui', 'products');
-  middleware: [createDevLogFromImmutable('products')],
+  initialState: Map({ products: ['iPhone'] }), // 请确保immutable是一个Map
+  isDev: true, // 当发现对象是 immutable时，middleware会遍历属性，使用getIn做浅比较打印 diff的对象
 });
 
 function actionAddProduct(product) {
