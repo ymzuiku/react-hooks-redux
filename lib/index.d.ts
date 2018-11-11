@@ -5,27 +5,37 @@ interface IStore {
   dispatch: Function;
   state: Object;
   initalState: Object;
-  actions: Object;
+  subscribe: Function;
 }
 
 interface IReactHooksRedux {
   Provider: React.Component;
   store: IStore;
 }
-interface IParams {
-  isDev: Boolean;
-  reducer: (state: Object, action: Function) => Object;
-  initialState: Object;
-  actions: Object;
-  middleware: Object | undefined;
+interface IReactHooksReduxParams {
+  isDev?: Boolean;
+  reducer?: (state: Object, action: Function) => Object;
+  initialState?: Object;
+  autoSave?: { localName: String; keys: Array<any> };
+  middleware?: Object | undefined;
 }
 
-declare function ReactHooksRedux(params: IParams): IReactHooksRedux;
+interface IStorage {
+  localName: string;
+  save: (obj: any, key: string) => void;
+  load: (key: string) => any;
+  clear: (key: string) => void;
+}
 
-export function devLog(
+export default function(params: IReactHooksReduxParams): IReactHooksRedux;
+
+export function middlewareLog(
   oldState: Object,
   nextState: Object,
   action: Object,
 ): void;
 
-export function reducerInAction(state: Object, action: Function): Object;
+export const reducerInAction: (state: Object, action: Function) => Object;
+
+export function middlewareImmutableLog(): void;
+export const storage: IStorage;
