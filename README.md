@@ -16,7 +16,7 @@ react-hooks 的更多信息请阅读 [reactjs.org/hooks](reactjs.org/hooks);
 ```js
 import React from 'react';
 
-function devLog(lastState, nextState, action, isDev) {
+function middlewareLog(lastState, nextState, action, isDev) {
   if (isDev) {
     console.log(
       `%c|------- redux: ${action.type} -------|`,
@@ -40,7 +40,7 @@ export default function createStore(params) {
     reducer: reducerInAction,
     initialState: {},
     actions: {},
-    middleware: params.isDev ? [devLog] : undefined,
+    middleware: params.isDev ? [middlewareLog] : undefined,
     ...params,
   };
   const AppContext = React.createContext();
@@ -212,14 +212,14 @@ return nextState;
 
 ```js
 import React from 'react';
-import ReactHookRedux, { reducerInAction, devLog } from 'react-hooks-redux';
+import ReactHookRedux, { reducerInAction, middlewareLog } from 'react-hooks-redux';
 
 // 通过 ReactHookRedux 获得 Provider 组件和一个 sotre 对象
 const { Provider, store } = ReactHookRedux({
   isDev: true, // default is false
   initialState: { count: 0, asyncCount: 0 }, // default is {}
   reducer: reducerInAction, // default is reducerInAction 所以可省略
-  middleware: [devLog], // default is [devLog] 所以可省略
+  middleware: [middlewareLog], // default is [middlewareLog] 所以可省略
   actions: {}, // default is {} 所以可省略
   autoSave: {
     item: 'localSaveKey',

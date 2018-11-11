@@ -34,8 +34,8 @@ export function middlewareLog(
   nextState: Object,
   action: Object,
 ): void;
+export function middlewareImmutableLog(): void;
 
 export const reducerInAction: (state: Object, action: Function) => Object;
 
-export function middlewareImmutableLog(): void;
 export const storage: IStorage;
