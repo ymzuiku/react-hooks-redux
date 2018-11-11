@@ -14,6 +14,7 @@ function subscribe(fn) {
     throw new Error('react-hooks-redux: subscribe params need a function');
   }
   subscribeNum++;
+  subscribeCache[subscribeNum] = fn;
   function unSubscribe() {
     delete subscribeCache[subscribeNum];
   }
@@ -25,14 +26,19 @@ function runSubscribes(action, state) {
     subscribeCache[k](state);
   }
 }
-export default function createStore(params) {
-  const { isDev, reducer, initialState, middleware } = {
-    isDev: false,
-    reducer: reducerInAction,
-    initialState: {},
-    middleware: params.isDev ? [middlewareLog] : undefined,
-    autoSave: { localName: undefined, keys: [] },
-    ...params,
+
+const defalutOptions = {
+  isDev: false,
+  reducer: reducerInAction,
+  initialState: {},
+  middleware: [middlewareLog],
+  autoSave: { item: undefined, keys: [] },
+};
+
+export default function createStore(options = defalutOptions) {
+  const { isDev, reducer, initialState, middleware, autoSave } = {
+    ...defalutOptions,
+    ...options,
   };
   const AppContext = React.createContext();
   const store = {
@@ -42,13 +48,15 @@ export default function createStore(params) {
     },
     subscribe,
     dispatch: undefined,
-    state: initialState,
+    _state: initialState,
+    getState: function() {
+      return store._state;
+    },
+    onload: [],
     initialState,
   };
-  if (store.autoSave && store.autoSave.localName) {
-    autoSaveLocalStorage(store, store.autoSave.localName, store.autoSave.keys);
-  }
-  const realReducer = function(lastState, action) {
+
+  const middlewareReducer = function(lastState, action) {
     let nextState = reducer(lastState, action);
     if (middleware) {
       if (Object.prototype.toString.call(middleware) !== '[object Array]') {
@@ -64,19 +72,26 @@ export default function createStore(params) {
     runSubscribes(action, nextState);
     return nextState;
   };
-
+  if (autoSave && autoSave.item) {
+    autoSaveLocalStorage(store, autoSave.item, autoSave.keys);
+  }
   function Provider(props) {
-    const [state, dispatch] = React.useReducer(realReducer, initialState);
+    const [state, dispatch] = React.useReducer(middlewareReducer, initialState);
     if (!store.dispatch) {
       store.dispatch = async function(action) {
         if (typeof action === 'function') {
-          await action(dispatch, store.state);
+          await action(dispatch, store._state);
         } else {
           dispatch(action);
         }
       };
     }
-    store.state = state;
+    store._state = state;
+    React.useEffect(() => {
+      for (let i = 0; i < store.onload.length; i++) {
+        store.onload[i]();
+      }
+    }, []);
     return <AppContext.Provider {...props} value={state} />;
   }
   return { Provider, store };
@@ -121,6 +136,33 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
   if (Object.prototype.toString.call(needSaveKeys) !== '[object Array]') {
     // eslint-disable-next-line
     console.warn('autoSaveStorageKeys: params is no a Array');
+  }
+  //首次加载读取历史数据
+  const lastLocalData = storage.load(storage.localName);
+  if (Object.prototype.toString.call(lastLocalData) === '[object Object]') {
+    store.onload.push(() => {
+      store.dispatch({
+        type: 'localStorageLoad: IO',
+        reducer: state => {
+          // 如果是immutable 使用toJS
+          if (state && state.toJS) {
+            const data = {
+              ...state.toJS(),
+              ...lastLocalData,
+            };
+            for (const key in data) {
+              state = state.set(key, data[key]);
+            }
+            return state;
+          }
+          // 非immutable直接合并历史数据
+          return {
+            ...state,
+            ...lastLocalData,
+          };
+        },
+      });
+    });
   }
   // 只有needSaveKeys的修改会激发IO, lastDats保存之前的记录
   const lastDatas = {};
@@ -168,31 +210,6 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
       }
     }
   });
-  //首次加载读取历史数据
-  const lastLocalData = storage.load(storage.localName);
-  if (Object.prototype.toString.call(lastLocalData) === '[object Object]') {
-    store.dispatch({
-      type: 'localStorageLoad: IO',
-      reducer: state => {
-        // 如果是immutable 使用toJS
-        if (state && state.toJS) {
-          const data = {
-            ...state.toJS(),
-            ...lastLocalData,
-          };
-          for (const key in data) {
-            state = state.setIn(key, data[key]);
-          }
-          return state;
-        }
-        // 非immutable直接合并历史数据
-        return {
-          ...state,
-          ...lastLocalData,
-        };
-      },
-    });
-  }
 }
 
 export function middlewareLog(store, lastState, nextState, action) {
