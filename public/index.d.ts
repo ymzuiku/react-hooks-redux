@@ -29,3 +29,5 @@ export function devLog(
 ): void;
 
 export function reducerInAction(state: Object, action: Function): Object;
+
+export function createDevLogFromImmutable():void;
