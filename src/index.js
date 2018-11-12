@@ -57,6 +57,9 @@ export default function createStore(options = defalutOptions) {
   };
   let isCheckedMiddleware = false;
   const middlewareReducer = function(lastState, action) {
+    if (!action) {
+      return lastState;
+    }
     let nextState = reducer(lastState, action);
     if (!isCheckedMiddleware) {
       if (Object.prototype.toString.call(middleware) !== '[object Array]') {
@@ -213,24 +216,35 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
 }
 
 export function middlewareLog(store, lastState, nextState, action) {
-  if (store.isDev) {
-    if (nextState && typeof nextState.toJS === 'function') {
-      const data = {};
+  if (store.isDev && !action.$NOLOG) {
+    console.log(
+      `%c|------- redux: ${action.type} -------|`,
+      `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
+    );
+    if (!action.$OBJLOG && nextState && typeof nextState.toJS === 'function') {
+      const next = {};
       nextState.map((d, k) => {
-        data[k] = d;
+        next[k] = d;
       });
-      console.log(
-        `%c|------- redux: ${action.type} -------|`,
-        `background: rgb(70, 70, 70); color: rgb(240, 235, 190); width:100%;`,
-      );
-      console.log('|--', data);
-    } else {
-      console.log(
-        `%c|------- redux: ${action.type} -------|`,
-        `background: rgb(70, 70, 70); color: rgb(240, 235, 190); width:100%;`,
-      );
+      if (action.$LASTLOG) {
+        const last = {};
+        lastState.map((d, k) => {
+          last[k] = d;
+        });
+        console.log('|--last', last);
+        console.log('|--next', next);
+      } else {
+        console.log('|--', next);
+      }
+    } else if (action.$LASTLOG) {
+      const last = {};
+      lastState.map((d, k) => {
+        last[k] = d;
+      });
       console.log('|--last', lastState);
       console.log('|--next', nextState);
+    } else {
+      console.log('|--', nextState);
     }
   }
 }
