@@ -193,7 +193,6 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
       }
     } else {
       // 非immutable做浅比较判断是否需要保存
-      console.log('kk', state);
       const nowDatas = {};
       let isNeedSave = true;
       needSaveKeys.forEach(v => {
@@ -215,7 +214,7 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
 
 export function middlewareLog(store, lastState, nextState, action) {
   if (store.isDev) {
-    if (lastState && typeof lastState.toJS === 'function') {
+    if (nextState && typeof nextState.toJS === 'function') {
       middlewareImmutableLog(store, lastState, nextState, action);
     } else {
       console.log(
@@ -230,12 +229,7 @@ export function middlewareLog(store, lastState, nextState, action) {
 
 export function middlewareImmutableLog(store, lastState, nextState, action) {
   if (store.isDev) {
-    let data;
-    if (nextState === undefined || !nextState.toJS) {
-      data = [lastState, nextState];
-    } else {
-      data = getImmerForKeys(lastState, nextState);
-    }
+    const data = getImmerForKeys(lastState, nextState);
     console.log(
       `%c|------- redux: ${action.type} -------|`,
       `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
@@ -249,8 +243,8 @@ function getImmerForKeys(last, next) {
   const endDiff = {};
   const endNext = {};
   // eslint-disable-next-line
-  last.map((d1, k) => {
-    const d2 = next.get(k);
+  next.map((d2, k) => {
+    const d1 = last.get(k);
     if (d1 !== d2) {
       if (Object.prototype.toString.call(d1) === '[object Object]') {
         endDiff[k] = {};
