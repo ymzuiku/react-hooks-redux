@@ -8,7 +8,7 @@ react-hooks 的更多信息请阅读 [reactjs.org/hooks](reactjs.org/hooks);
 
 ## 先看看源码
 
-这 70 行代码就是全部, 客官可以先阅读，或许后续的说明文档也就不需要阅读了。
+这 70 行代码是一个完整的逻辑, 客官可以先阅读，或许后续的说明文档也就不需要阅读了。
 
 - 简易的实现了 react-redux, redux-thunk 和 redux-logger
 - 默认使用 reducer-in-action 的风格, 也可声明传统的 reducer 风格
@@ -35,52 +35,56 @@ function reducerInAction(state, action) {
 }
 
 export default function createStore(params) {
-  const { isDev, reducer, initialState, actions, middleware } = {
+  const { isDev, reducer, initialState, middleware } = {
     isDev: false,
     reducer: reducerInAction,
     initialState: {},
-    actions: {},
     middleware: params.isDev ? [middlewareLog] : undefined,
     ...params,
   };
   const AppContext = React.createContext();
   const store = {
+    isDev,
+    _state: initialState,
     useContext: function() {
       return React.useContext(AppContext);
     },
-    actions,
     dispatch: undefined,
-    state: initialState,
+    getState: function() {
+      return store._state;
+    },
     initialState,
   };
-  let realReducer;
-  if (middleware) {
-    realReducer = function(lastState, action) {
-      let nextState = reducer(lastState, action);
-      for (let i = 0; i < middleware.length; i++) {
-        const newState = middleware[i](lastState, nextState, action, isDev);
-        if (newState) {
-          nextState = newState;
-        }
+  let isCheckedMiddleware = false;
+  const middlewareReducer = function(lastState, action) {
+    let nextState = reducer(lastState, action);
+    if (!isCheckedMiddleware) {
+      if (Object.prototype.toString.call(middleware) !== '[object Array]') {
+        throw new Error("react-hooks-redux: middleware isn't Array");
       }
-      return nextState;
-    };
-  } else {
-    realReducer = reducer;
-  }
+      isCheckedMiddleware = true;
+    }
+    for (let i = 0; i < middleware.length; i++) {
+      const newState = middleware[i](store, lastState, nextState, action);
+      if (newState) {
+        nextState = newState;
+      }
+    }
+    store._state = nextState;
+    return nextState;
+  };
 
   const Provider = props => {
-    const [state, dispatch] = React.useReducer(realReducer, initialState);
+    const [state, dispatch] = React.useReducer(middlewareReducer, initialState);
     if (!store.dispatch) {
       store.dispatch = async function(action) {
         if (typeof action === 'function') {
-          await action(dispatch, store.state);
+          await action(dispatch, store._state);
         } else {
           dispatch(action);
         }
       };
     }
-    store.state = state;
     return <AppContext.Provider {...props} value={state} />;
   };
   return { Provider, store };
@@ -204,17 +208,26 @@ return nextState;
 
 如果我们需要手动控制减少更新 可以参考 [useMemo](https://reactjs.org/docs/hooks-reference.html#usememo) 钩子的使用方式进行配合。
 
+如果不希望组件被 store.dispatch() 派发更新，仅读取数据可以使用 store.getState(), 这样也可以减少一些不必要的组件更新。
+
 以上都是理论分析，由于此库和此文档是一个深夜的产物，并没有去做性能上的基准测试，所以有人如果愿意非常欢迎帮忙做一些基准测试。
+
 
 # 其他例子
 
-随着工作的进展，额外增加了一些功能，如使用 autoSave 约定进行 state 的缓存和读取，middlewareLog 可以打印 immutable 对象等和状态管理相关的功能。
+随着工作的进展，完善了一些功能， 代码量也上升到了300行，有兴趣的可以去仓库看看：
+- subscribe 添加监听
+- 如使用 autoSave 约定进行 state 的缓存和读取
+- middlewareLog 可以打印 immutable 对象等和状态管理相关的功能
 
-## 异步 action 并且缓存state到浏览器的例子
+## 异步 action 并且缓存 state 到浏览器的例子
 
 ```js
 import React from 'react';
-import ReactHookRedux, { reducerInAction, middlewareLog } from 'react-hooks-redux';
+import ReactHookRedux, {
+  reducerInAction,
+  middlewareLog,
+} from 'react-hooks-redux';
 
 // 通过 ReactHookRedux 获得 Provider 组件和一个 sotre 对象
 const { Provider, store } = ReactHookRedux({

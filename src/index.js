@@ -43,30 +43,31 @@ export default function createStore(options = defalutOptions) {
   const AppContext = React.createContext();
   const store = {
     isDev,
+    _state: initialState,
     useContext: function() {
       return React.useContext(AppContext);
     },
     subscribe,
     dispatch: undefined,
-    _state: initialState,
     getState: function() {
       return store._state;
     },
     onload: [],
     initialState,
   };
-
+  let isCheckedMiddleware = false;
   const middlewareReducer = function(lastState, action) {
     let nextState = reducer(lastState, action);
-    if (middleware) {
+    if (!isCheckedMiddleware) {
       if (Object.prototype.toString.call(middleware) !== '[object Array]') {
         throw new Error("react-hooks-redux: middleware isn't Array");
       }
-      for (let i = 0; i < middleware.length; i++) {
-        const newState = middleware[i](store, lastState, nextState, action);
-        if (newState) {
-          nextState = newState;
-        }
+      isCheckedMiddleware = true;
+    }
+    for (let i = 0; i < middleware.length; i++) {
+      const newState = middleware[i](store, lastState, nextState, action);
+      if (newState) {
+        nextState = newState;
       }
     }
     store._state = nextState;
@@ -247,16 +248,17 @@ export function middlewareImmutableLog(store, lastState, nextState, action) {
 function getImmerForKeys(last, next) {
   const endDiff = {};
   const endNext = {};
+  // eslint-disable-next-line
   last.map((d1, k) => {
     const d2 = next.get(k);
     if (d1 !== d2) {
-      if (Object.prototype.toString.call(d2) === '[object Object]') {
+      if (Object.prototype.toString.call(d1) === '[object Object]') {
         endDiff[k] = {};
-        for (const ks in d2) {
-          const sub1 = last.getIn([k, ks]);
-          const sub2 = next.getIn([k, ks]);
+        for (const k2 in d2) {
+          const sub1 = last.getIn([k, k2]);
+          const sub2 = next.getIn([k, k2]);
           if (sub1 !== sub2) {
-            endDiff[k][ks] = sub2;
+            endDiff[k][k2] = sub2;
           }
         }
       } else {
