@@ -229,37 +229,14 @@ export function middlewareLog(store, lastState, nextState, action) {
 
 export function middlewareImmutableLog(store, lastState, nextState, action) {
   if (store.isDev) {
-    const data = getImmerForKeys(lastState, nextState);
+    const data = {};
+    nextState.map((d, k)=>{
+      data[k] = d;
+    });
     console.log(
       `%c|------- redux: ${action.type} -------|`,
       `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
     );
-    console.log('|--diff:', data[0]);
-    console.log('|--merge:', data[1]);
+    console.log('|--:', data);
   }
-}
-
-function getImmerForKeys(last, next) {
-  const endDiff = {};
-  const endNext = {};
-  // eslint-disable-next-line
-  next.map((d2, k) => {
-    const d1 = last.get(k);
-    if (d1 !== d2) {
-      if (Object.prototype.toString.call(d1) === '[object Object]') {
-        endDiff[k] = {};
-        for (const k2 in d2) {
-          const sub1 = last.getIn([k, k2]);
-          const sub2 = next.getIn([k, k2]);
-          if (sub1 !== sub2) {
-            endDiff[k][k2] = sub2;
-          }
-        }
-      } else {
-        endDiff[k] = d2;
-      }
-    }
-    endNext[k] = d2;
-  });
-  return [endDiff, endNext];
 }
