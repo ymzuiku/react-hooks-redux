@@ -21,9 +21,9 @@ function subscribe(fn) {
   return unSubscribe;
 }
 
-function runSubscribes(action, state) {
+function runSubscribes(state, action) {
   for (const k in subscribeCache) {
-    subscribeCache[k](state);
+    subscribeCache[k](state, action);
   }
 }
 
@@ -71,7 +71,7 @@ export default function createStore(options = defalutOptions) {
       }
     }
     store._state = nextState;
-    runSubscribes(action, nextState);
+    runSubscribes(nextState, action);
     return nextState;
   };
   if (autoSave && autoSave.item) {
@@ -215,28 +215,22 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
 export function middlewareLog(store, lastState, nextState, action) {
   if (store.isDev) {
     if (nextState && typeof nextState.toJS === 'function') {
-      middlewareImmutableLog(store, lastState, nextState, action);
+      const data = {};
+      nextState.map((d, k) => {
+        data[k] = d;
+      });
+      console.log(
+        `%c|------- redux: ${action.type} -------|`,
+        `background: rgb(70, 70, 70); color: rgb(240, 235, 190); width:100%;`,
+      );
+      console.log('|--', data);
     } else {
       console.log(
         `%c|------- redux: ${action.type} -------|`,
-        `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
+        `background: rgb(70, 70, 70); color: rgb(240, 235, 190); width:100%;`,
       );
       console.log('|--last', lastState);
       console.log('|--next', nextState);
     }
-  }
-}
-
-export function middlewareImmutableLog(store, lastState, nextState, action) {
-  if (store.isDev) {
-    const data = {};
-    nextState.map((d, k)=>{
-      data[k] = d;
-    });
-    console.log(
-      `%c|------- redux: ${action.type} -------|`,
-      `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
-    );
-    console.log('|--', data);
   }
 }

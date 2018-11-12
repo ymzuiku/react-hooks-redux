@@ -30,11 +30,11 @@ interface IStorage {
 export default function(params: IReactHooksReduxParams): IReactHooksRedux;
 
 export function middlewareLog(
+  store: Object,
   oldState: Object,
   nextState: Object,
   action: Object,
 ): void;
-export function middlewareImmutableLog(): void;
 
 export const reducerInAction: (state: Object, action: Function) => Object;
 
