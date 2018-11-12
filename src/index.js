@@ -221,8 +221,8 @@ export function middlewareLog(store, lastState, nextState, action) {
         `%c|------- redux: ${action.type} -------|`,
         `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
       );
-      console.log('|--last:', lastState);
-      console.log('|--next:', nextState);
+      console.log('|--last', lastState);
+      console.log('|--next', nextState);
     }
   }
 }
@@ -237,6 +237,6 @@ export function middlewareImmutableLog(store, lastState, nextState, action) {
       `%c|------- redux: ${action.type} -------|`,
       `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
     );
-    console.log('|--:', data);
+    console.log('|--', data);
   }
 }
