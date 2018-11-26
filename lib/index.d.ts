@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 
 interface IStore {
   useContext: Function;
@@ -6,6 +6,11 @@ interface IStore {
   state: Object;
   initalState: Object;
   subscribe: Function;
+  connect: (
+    Component: React.Component,
+    mapStateToProps?: Function,
+    mapDispatchToProps?: Function
+  ) => React.Component;
 }
 
 interface IReactHooksRedux {
@@ -27,13 +32,15 @@ interface IStorage {
   clear: (key: string) => void;
 }
 
-export default function createStore(params: IReactHooksReduxParams): IReactHooksRedux;
+export default function createStore(
+  params: IReactHooksReduxParams
+): IReactHooksRedux;
 
 export function middlewareLog(
   store: Object,
   oldState: Object,
   nextState: Object,
-  action: Object,
+  action: Object
 ): void;
 
 export const reducerInAction: (state: Object, action: Function) => Object;

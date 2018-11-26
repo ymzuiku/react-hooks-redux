@@ -7,10 +7,10 @@ interface IStore {
   initalState: Object;
   subscribe: Function;
   connect: (
-    Component: any,
+    Component: React.Component,
     mapStateToProps?: Function,
     mapDispatchToProps?: Function
-  ) => any;
+  ) => React.Component;
 }
 
 interface IReactHooksRedux {
