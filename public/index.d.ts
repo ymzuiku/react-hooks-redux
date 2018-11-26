@@ -27,7 +27,7 @@ interface IStorage {
   clear: (key: string) => void;
 }
 
-export default function(params: IReactHooksReduxParams): IReactHooksRedux;
+export default function createStore(params: IReactHooksReduxParams): IReactHooksRedux;
 
 export function middlewareLog(
   store: Object,
