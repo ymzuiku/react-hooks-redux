@@ -1,7 +1,7 @@
-import React from 'react';
+import React from "react";
 
 function reducerInAction(state, action) {
-  if (typeof action.reducer === 'function') {
+  if (typeof action.reducer === "function") {
     return action.reducer(state);
   }
   return state;
@@ -10,8 +10,8 @@ function reducerInAction(state, action) {
 const subscribeCache = {};
 let subscribeNum = 0;
 function subscribe(fn) {
-  if (typeof fn !== 'function') {
-    throw new Error('react-hooks-redux: subscribe params need a function');
+  if (typeof fn !== "function") {
+    throw new Error("react-hooks-redux: subscribe params need a function");
   }
   subscribeNum++;
   subscribeCache[subscribeNum] = fn;
@@ -32,13 +32,13 @@ const defalutOptions = {
   reducer: reducerInAction,
   initialState: {},
   middleware: [middlewareLog],
-  autoSave: { item: undefined, keys: [] },
+  autoSave: { item: undefined, keys: [] }
 };
 
 export default function createStore(options = defalutOptions) {
   const { isDev, reducer, initialState, middleware, autoSave } = {
     ...defalutOptions,
-    ...options,
+    ...options
   };
   const AppContext = React.createContext();
   const store = {
@@ -54,6 +54,21 @@ export default function createStore(options = defalutOptions) {
     },
     onload: [],
     initialState,
+    connect: function(Comp, mapStateToProps, mapDispatchToProps) {
+      return function(props) {
+        const imm = store.useContext();
+        const stateToProps = mapStateToProps(imm);
+        const dispatchProps = mapDispatchToProps(store.dispatch, imm);
+        const memoList = [];
+        for (const k in stateToProps) {
+          memoList.push(stateToProps[k]);
+        }
+        function render() {
+          return <Comp {...stateToProps} {...dispatchProps} {...props} />;
+        }
+        return React.useMemo(render, memoList);
+      };
+    }
   };
   let isCheckedMiddleware = false;
   const middlewareReducer = function(lastState, action) {
@@ -62,7 +77,7 @@ export default function createStore(options = defalutOptions) {
     }
     let nextState = reducer(lastState, action);
     if (!isCheckedMiddleware) {
-      if (Object.prototype.toString.call(middleware) !== '[object Array]') {
+      if (Object.prototype.toString.call(middleware) !== "[object Array]") {
         throw new Error("react-hooks-redux: middleware isn't Array");
       }
       isCheckedMiddleware = true;
@@ -84,7 +99,7 @@ export default function createStore(options = defalutOptions) {
     const [state, dispatch] = React.useReducer(middlewareReducer, initialState);
     if (!store.dispatch) {
       store.dispatch = async function(action) {
-        if (typeof action === 'function') {
+        if (typeof action === "function") {
           await action(dispatch, store._state);
         } else {
           dispatch(action);
@@ -103,33 +118,33 @@ export default function createStore(options = defalutOptions) {
 
 // 用于本地存储的方法
 export const storage = {
-  localName: 'defaultIOKey',
+  localName: "defaultIOKey",
   save: (v, theKey = storage.localName) => {
     const theType = Object.prototype.toString.call(v);
-    if (theType === '[object Object]') {
+    if (theType === "[object Object]") {
       localStorage.setItem(theKey, JSON.stringify(v));
-    } else if (theType === '[object String]') {
+    } else if (theType === "[object String]") {
       localStorage.setItem(theKey, v);
     } else {
-      console.warn('Warn: storage.save() param is no a Object');
+      console.warn("Warn: storage.save() param is no a Object");
     }
   },
   load: (theKey = storage.localName) => {
     try {
       const data = localStorage.getItem(theKey);
       if (data) {
-        if (typeof data === 'string') {
+        if (typeof data === "string") {
           return JSON.parse(data);
         }
         return data;
       }
     } catch (err) {
-      console.warn('load last localSate error');
+      console.warn("load last localSate error");
     }
   },
   clear: (theKey = storage.localName) => {
     localStorage.setItem(theKey, {});
-  },
+  }
 };
 
 // 这里做自动保存的监听
@@ -137,22 +152,22 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
   if (localName) {
     storage.localName = localName;
   }
-  if (Object.prototype.toString.call(needSaveKeys) !== '[object Array]') {
+  if (Object.prototype.toString.call(needSaveKeys) !== "[object Array]") {
     // eslint-disable-next-line
-    console.warn('autoSaveStorageKeys: params is no a Array');
+    console.warn("autoSaveStorageKeys: params is no a Array");
   }
   //首次加载读取历史数据
   const lastLocalData = storage.load(storage.localName);
-  if (Object.prototype.toString.call(lastLocalData) === '[object Object]') {
+  if (Object.prototype.toString.call(lastLocalData) === "[object Object]") {
     store.onload.push(() => {
       store.dispatch({
-        type: 'localStorageLoad: IO',
+        type: "localStorageLoad: IO",
         reducer: state => {
           // 如果是immutable 使用toJS
           if (state && state.toJS) {
             const data = {
               ...state.toJS(),
-              ...lastLocalData,
+              ...lastLocalData
             };
             for (const key in data) {
               state = state.set(key, data[key]);
@@ -162,9 +177,9 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
           // 非immutable直接合并历史数据
           return {
             ...state,
-            ...lastLocalData,
+            ...lastLocalData
           };
-        },
+        }
       });
     });
   }
@@ -181,7 +196,7 @@ export function autoSaveLocalStorage(store, localName, needSaveKeys) {
       let isNeedSave = false;
       needSaveKeys.forEach(v => {
         // 监听数据和 Immutable 配合做低开销校验
-        if (Object.prototype.toString.call(v) === '[object Array]') {
+        if (Object.prototype.toString.call(v) === "[object Array]") {
           nowDatas[v] = state.getIn(v);
         } else {
           nowDatas[v] = state.get(v);
@@ -219,9 +234,9 @@ export function middlewareLog(store, lastState, nextState, action) {
   if (store.isDev && !action.$NOLOG) {
     console.log(
       `%c|------- redux: ${action.type} -------|`,
-      `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`,
+      `background: rgb(70, 70, 70); color: rgb(240, 235, 200); width:100%;`
     );
-    if (!action.$OBJLOG && nextState && typeof nextState.toJS === 'function') {
+    if (!action.$OBJLOG && nextState && typeof nextState.toJS === "function") {
       const next = {};
       nextState.map((d, k) => {
         next[k] = d;
@@ -231,20 +246,20 @@ export function middlewareLog(store, lastState, nextState, action) {
         lastState.map((d, k) => {
           last[k] = d;
         });
-        console.log('|--last', last);
-        console.log('|--next', next);
+        console.log("|--last", last);
+        console.log("|--next", next);
       } else {
-        console.log('|--', next);
+        console.log("|--", next);
       }
     } else if (action.$LASTLOG) {
       const last = {};
       lastState.map((d, k) => {
         last[k] = d;
       });
-      console.log('|--last', lastState);
-      console.log('|--next', nextState);
+      console.log("|--last", lastState);
+      console.log("|--next", nextState);
     } else {
-      console.log('|--', nextState);
+      console.log("|--", nextState);
     }
   }
 }

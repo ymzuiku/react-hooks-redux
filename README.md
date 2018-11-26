@@ -345,6 +345,31 @@ export default function App() {
 }
 ```
 
+## 使用connect风格：
+
+```js
+function mapStateToProps(state) {
+  return {
+    imgList: state.getIn(['data', 'images', 'hits']),
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    asyncGetImages: async function() {
+      return await dispatch(await actions.asyncGetImages());
+    },
+  };
+}
+
+export default store.connect(
+  Compontent,
+  mapStateToProps,
+  mapDispatchToProps,
+);
+
+```
+
 谢谢阅读。
 
 ## Licenes
