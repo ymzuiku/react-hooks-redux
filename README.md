@@ -363,10 +363,9 @@ function mapDispatchToProps(dispatch) {
 }
 
 export default store.connect(
-  Compontent,
   mapStateToProps,
   mapDispatchToProps,
-);
+)(Compontent);
 
 ```
 
