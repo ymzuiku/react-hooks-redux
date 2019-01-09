@@ -54,19 +54,21 @@ export default function createStore(options = defalutOptions) {
     },
     onload: [],
     initialState,
-    connect: function(Comp, mapStateToProps, mapDispatchToProps) {
-      return function(props) {
-        const imm = store.useContext();
-        const stateToProps = mapStateToProps(imm);
-        const dispatchProps = mapDispatchToProps(store.dispatch, imm);
-        const memoList = [];
-        for (const k in stateToProps) {
-          memoList.push(stateToProps[k]);
-        }
-        function render() {
-          return <Comp {...stateToProps} {...dispatchProps} {...props} />;
-        }
-        return React.useMemo(render, memoList);
+    connect: function(mapStateToProps, mapDispatchToProps) {
+      return function(Comp) {
+        return function(props) {
+          const imm = store.useContext();
+          const stateToProps = mapStateToProps(imm);
+          const dispatchProps = mapDispatchToProps(store.dispatch, imm);
+          const memoList = [];
+          for (const k in stateToProps) {
+            memoList.push(stateToProps[k]);
+          }
+          function render() {
+            return <Comp {...stateToProps} {...dispatchProps} {...props} />;
+          }
+          return React.useMemo(render, memoList);
+        };
       };
     }
   };
